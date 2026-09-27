@@ -4,13 +4,13 @@
       "name": "RANGPUR",
       "deviceIp": "59.152.5.100",
       "gps": {
-        "latitude": 25.7629654,
-        "longitude": 89.2501406,
-        "accuracyMeters": 5.77400016784668,
+        "latitude": 25.7629657,
+        "longitude": 89.2501411,
+        "accuracyMeters": 4.809000015258789,
         "altitude": -8.399999618530273,
-        "timestamp": "2026-09-27T13:17:46.839Z"
+        "timestamp": "2026-09-27T13:17:56.848Z"
       },
-      "updatedAt": "2026-09-27T13:17:47.590Z"
+      "updatedAt": "2026-09-27T13:17:57.645Z"
     },
     "dev-f3464e6b-c893-4afe-8cac-c3f0b7f10471": {
       "name": "TD",
