@@ -13,16 +13,16 @@
       "updatedAt": "2026-09-27T12:51:08.610Z"
     },
     "dev-f3464e6b-c893-4afe-8cac-c3f0b7f10471": {
-      "name": "Anonymous",
+      "name": "TD",
       "deviceIp": "Unknown",
       "gps": {
         "latitude": 23.792301387959807,
         "longitude": 90.40421050091564,
         "accuracyMeters": 100,
         "altitude": 0,
-        "timestamp": "2026-09-27T13:00:44.497Z"
+        "timestamp": "2026-09-27T13:00:52.040Z"
       },
-      "updatedAt": "2026-09-27T13:00:45.618Z"
+      "updatedAt": "2026-09-27T13:00:53.126Z"
     }
   }
 }
