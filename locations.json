@@ -4,13 +4,13 @@
       "name": "Tasdid",
       "deviceIp": "59.152.5.100",
       "gps": {
-        "latitude": 25.7629646,
-        "longitude": 89.250138,
-        "accuracyMeters": 5.165999889373779,
+        "latitude": 25.7629542,
+        "longitude": 89.2501389,
+        "accuracyMeters": 17.719999313354492,
         "altitude": -8.399999618530273,
-        "timestamp": "2026-09-27T12:50:54.428Z"
+        "timestamp": "2026-09-27T12:51:07.589Z"
       },
-      "updatedAt": "2026-09-27T12:50:55.597Z"
+      "updatedAt": "2026-09-27T12:51:08.610Z"
     }
   }
 }
