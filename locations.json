@@ -1,16 +1,16 @@
 {
   "devices": {
     "dev-c400c520-a7fd-45f9-a8a3-224e3c27a252": {
-      "name": "Tasdid",
+      "name": "RANGPUR",
       "deviceIp": "59.152.5.100",
       "gps": {
-        "latitude": 25.7629542,
-        "longitude": 89.2501389,
-        "accuracyMeters": 17.719999313354492,
+        "latitude": 25.7629723,
+        "longitude": 89.2501138,
+        "accuracyMeters": 14.685999870300293,
         "altitude": -8.399999618530273,
-        "timestamp": "2026-09-27T12:51:07.589Z"
+        "timestamp": "2026-09-27T13:15:29.949Z"
       },
-      "updatedAt": "2026-09-27T12:51:08.610Z"
+      "updatedAt": "2026-09-27T13:15:30.982Z"
     },
     "dev-f3464e6b-c893-4afe-8cac-c3f0b7f10471": {
       "name": "TD",
