@@ -37,16 +37,16 @@
       "updatedAt": "2026-09-27T13:18:31.188Z"
     },
     "dev-1c7c8409-eece-4b71-b7bb-ceaf39f98934": {
-      "name": "Mahadi Hasan",
+      "name": "Mahadi Hasan 2",
       "deviceIp": "103.148.212.250",
       "gps": {
-        "latitude": 23.7922256,
-        "longitude": 90.4041849,
-        "accuracyMeters": 11.12600040435791,
+        "latitude": 23.7920337,
+        "longitude": 90.4042748,
+        "accuracyMeters": 18.047000885009766,
         "altitude": -37.500003814697266,
-        "timestamp": "2026-09-27T13:54:33.632Z"
+        "timestamp": "2026-09-27T14:57:10.767Z"
       },
-      "updatedAt": "2026-09-27T13:54:35.319Z"
+      "updatedAt": "2026-09-27T14:57:12.950Z"
     }
   }
 }
