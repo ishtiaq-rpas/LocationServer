@@ -35,6 +35,18 @@
         "timestamp": "2026-09-27T13:18:30.054Z"
       },
       "updatedAt": "2026-09-27T13:18:31.188Z"
+    },
+    "dev-1c7c8409-eece-4b71-b7bb-ceaf39f98934": {
+      "name": "Anonymous",
+      "deviceIp": "103.148.212.250",
+      "gps": {
+        "latitude": 23.7920988,
+        "longitude": 90.4042175,
+        "accuracyMeters": 14.220999717712402,
+        "altitude": -37.500003814697266,
+        "timestamp": "2026-09-27T13:36:57.916Z"
+      },
+      "updatedAt": "2026-09-27T13:36:59.906Z"
     }
   }
 }
