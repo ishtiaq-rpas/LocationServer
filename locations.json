@@ -40,13 +40,13 @@
       "name": "Mahadi Hasan",
       "deviceIp": "103.148.212.250",
       "gps": {
-        "latitude": 23.7919447,
-        "longitude": 90.4038927,
-        "accuracyMeters": 23.71500015258789,
+        "latitude": 23.7919147,
+        "longitude": 90.4038785,
+        "accuracyMeters": 31.259000778198242,
         "altitude": -37.30000305175781,
-        "timestamp": "2026-09-27T13:49:23.002Z"
+        "timestamp": "2026-09-27T13:49:28.778Z"
       },
-      "updatedAt": "2026-09-27T13:49:24.992Z"
+      "updatedAt": "2026-09-27T13:49:30.307Z"
     }
   }
 }
