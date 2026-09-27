@@ -5,12 +5,12 @@
       "deviceIp": "59.152.5.100",
       "gps": {
         "latitude": 25.7629624,
-        "longitude": 89.2501362,
-        "accuracyMeters": 17.736000061035156,
+        "longitude": 89.2501397,
+        "accuracyMeters": 11.295999526977539,
         "altitude": -8.399999618530273,
-        "timestamp": "2026-09-27T13:17:18.971Z"
+        "timestamp": "2026-09-27T13:17:30.062Z"
       },
-      "updatedAt": "2026-09-27T13:17:19.724Z"
+      "updatedAt": "2026-09-27T13:17:31.209Z"
     },
     "dev-f3464e6b-c893-4afe-8cac-c3f0b7f10471": {
       "name": "TD",
