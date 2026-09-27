@@ -226,9 +226,22 @@
     }
 
     .sos-btn.loading {
-      pointer-events: none;
       filter: grayscale(0.2) brightness(0.85);
       animation: button-breathing 1.2s infinite alternate;
+    }
+
+    .sos-btn.active-tracking {
+      background: radial-gradient(circle at 35% 30%, #ef4444 0%, #b91c1c 55%, #7f1d1d 100%);
+      box-shadow: 
+        0 14px 45px rgba(239, 68, 68, 0.75),
+        inset 0 4px 6px rgba(255, 255, 255, 0.4),
+        inset 0 -6px 8px rgba(0, 0, 0, 0.5);
+      animation: button-transmitting 1.4s infinite alternate;
+    }
+
+    @keyframes button-transmitting {
+      0% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.5)); }
+      100% { transform: scale(1.05); filter: drop-shadow(0 0 25px rgba(239, 68, 68, 0.9)); }
     }
 
     @keyframes button-breathing {
@@ -322,7 +335,7 @@
     </div>
     
     <h1>SOS Beacon</h1>
-    <p class="subtitle">Press the SOS button below to transmit your device location and IP to the server repository.</p>
+    <p class="subtitle">Tap SOS to start live tracking. Your GPS location and device IP will transmit automatically every 5 seconds.</p>
 
     <!-- Name input (optional) -->
     <div class="field-group">
@@ -583,32 +596,52 @@
       return await putRes.json();
     }
 
-    // SOS Trigger Handler
-    sosBtn.addEventListener('click', async () => {
-      // Android Haptic Vibration Feedback
-      if (navigator.vibrate) {
-        navigator.vibrate([120, 80, 200]);
+    // Periodic 5-Second Tracking State
+    let isTracking = false;
+    let trackingInterval = null;
+    let wakeLock = null;
+    let isTransmitting = false; // Prevent overlapping API calls
+    let cachedIp = null; // Cache IP to avoid hammering ipify every 5 seconds
+
+    // Keep screen awake while tracking on supported Android devices
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+        }
+      } catch (err) {
+        console.warn('Wake Lock error:', err);
       }
+    }
+
+    function releaseWakeLock() {
+      if (wakeLock) {
+        wakeLock.release().catch(() => {});
+        wakeLock = null;
+      }
+    }
+
+    // Execute one transmission cycle
+    async function executeTrackingCycle() {
+      if (isTransmitting) return; // Skip if previous GitHub commit is still in-flight
+      isTransmitting = true;
 
       const name = userNameInput.value.trim() || 'Anonymous';
       localStorage.setItem('sos_user_name', name);
 
-      // UI state
-      sosBtn.classList.add('loading');
-      statusBox.className = 'status-box';
-      statusBox.textContent = 'Acquiring GPS & Network IP...';
-
       try {
-        // Run IP lookup and GPS query concurrently
-        const [ip, coords] = await Promise.all([
-          fetchPublicIP(),
-          getGPSLocation()
-        ]);
+        // Fetch IP once and cache it, refresh if empty
+        if (!cachedIp) {
+          cachedIp = await fetchPublicIP();
+        }
+
+        statusBox.textContent = 'Acquiring GPS fix (5s loop)...';
+        const coords = await getGPSLocation();
 
         const record = {
           deviceId: deviceId,
           name: name,
-          deviceIp: ip,
+          deviceIp: cachedIp,
           gps: {
             latitude: coords.latitude,
             longitude: coords.longitude,
@@ -618,26 +651,69 @@
           }
         };
 
-        statusBox.textContent = 'Transmitting to server...';
+        statusBox.textContent = 'Syncing location to GitHub...';
         await updateLocationData(record);
 
-        // Success vibration pattern
-        if (navigator.vibrate) {
-          navigator.vibrate([60, 60, 60]);
-        }
-
+        const timeStr = new Date().toLocaleTimeString();
         statusBox.className = 'status-box success';
-        statusBox.textContent = `SOS Transmitted! Lat: ${coords.latitude.toFixed(4)}, Lon: ${coords.longitude.toFixed(4)} (IP: ${ip})`;
+        statusBox.textContent = `[${timeStr}] Synced: Lat ${coords.latitude.toFixed(4)}, Lon ${coords.longitude.toFixed(4)}`;
 
+        // Micro-haptic feedback every 5s on Android
+        if (navigator.vibrate) {
+          navigator.vibrate(40);
+        }
       } catch (err) {
         console.error(err);
-        if (navigator.vibrate) {
-          navigator.vibrate([300]);
-        }
         statusBox.className = 'status-box error';
-        statusBox.textContent = `Error: ${err.message}`;
+        statusBox.textContent = `Sync Error: ${err.message}`;
       } finally {
-        sosBtn.classList.remove('loading');
+        isTransmitting = false;
+      }
+    }
+
+    function startLiveTracking() {
+      isTracking = true;
+      sosBtn.classList.add('active-tracking');
+      sosBtn.textContent = 'STOP';
+      statusBox.className = 'status-box';
+      statusBox.textContent = 'Live beacon active. Updating every 5 seconds...';
+
+      if (navigator.vibrate) {
+        navigator.vibrate([100, 80, 150]);
+      }
+      requestWakeLock();
+
+      // Trigger first cycle immediately
+      executeTrackingCycle();
+
+      // Repeat precisely every 5 seconds (5000ms)
+      trackingInterval = setInterval(executeTrackingCycle, 5000);
+    }
+
+    function stopLiveTracking() {
+      isTracking = false;
+      if (trackingInterval) {
+        clearInterval(trackingInterval);
+        trackingInterval = null;
+      }
+      releaseWakeLock();
+      sosBtn.classList.remove('active-tracking');
+      sosBtn.classList.remove('loading');
+      sosBtn.textContent = 'SOS';
+      statusBox.className = 'status-box';
+      statusBox.textContent = 'Beacon paused. Tap SOS to resume 5-second updates.';
+
+      if (navigator.vibrate) {
+        navigator.vibrate(120);
+      }
+    }
+
+    // SOS / Toggle Trigger Handler
+    sosBtn.addEventListener('click', () => {
+      if (isTracking) {
+        stopLiveTracking();
+      } else {
+        startLiveTracking();
       }
     });
   </script>
