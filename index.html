@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOS Location Beacon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(18, 26, 44, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --sos-red: #ef4444;
+      --sos-glow: rgba(239, 68, 68, 0.45);
+      --accent-cyan: #38bdf8;
+      --success: #22c55e;
+      --warning: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at 50% 20%, #172554 0%, var(--bg) 65%);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Background animated rings */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+      background-size: 24px 24px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 440px;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 28px;
+      padding: 2.2rem 1.8rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.65), 0 0 40px rgba(56, 189, 248, 0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 0.75rem;
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--accent-cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-cyan);
+      animation: pulse-dot 2s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.35rem;
+    }
+
+    p.subtitle {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 1.75rem;
+      line-height: 1.4;
+    }
+
+    .field-group {
+      width: 100%;
+      text-align: left;
+      margin-bottom: 2rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      color: #fff;
+      outline: none;
+      transition: all 0.25s ease;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    input[type="text"]::placeholder {
+      color: #64748b;
+    }
+
+    /* SOS Button Outer Pulsing Ring */
+    .sos-button-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .pulse-ring {
+      position: absolute;
+      width: 175px;
+      height: 175px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--sos-glow) 0%, transparent 70%);
+      animation: pulse-ring-anim 2.2s cubic-bezier(0.25, 0, 0, 1) infinite;
+      z-index: 0;
+    }
+
+    @keyframes pulse-ring-anim {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+
+    .sos-btn {
+      position: relative;
+      z-index: 1;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: none;
+      background: radial-gradient(circle at 35% 30%, #f87171 0%, #dc2626 55%, #991b1b 100%);
+      box-shadow: 
+        0 12px 35px rgba(220, 38, 38, 0.55),
+        inset 0 4px 6px rgba(255, 255, 255, 0.35),
+        inset 0 -6px 8px rgba(0, 0, 0, 0.4);
+      color: #ffffff;
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.2s ease;
+    }
+
+    .sos-btn:hover {
+      transform: scale(1.04);
+      box-shadow: 
+        0 16px 45px rgba(239, 68, 68, 0.65),
+        inset 0 4px 8px rgba(255, 255, 255, 0.45),
+        inset 0 -6px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    .sos-btn:active {
+      transform: scale(0.95);
+      box-shadow: 
+        0 6px 20px rgba(220, 38, 38, 0.5),
+        inset 0 4px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .sos-btn.loading {
+      pointer-events: none;
+      filter: grayscale(0.2) brightness(0.85);
+      animation: button-breathing 1.2s infinite alternate;
+    }
+
+    @keyframes button-breathing {
+      0% { transform: scale(0.97); }
+      100% { transform: scale(1.02); }
+    }
+
+    /* Status Display */
+    .status-box {
+      width: 100%;
+      min-height: 48px;
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .status-box.success {
+      color: #86efac;
+      border-color: rgba(34, 197, 94, 0.3);
+      background: rgba(34, 197, 94, 0.08);
+    }
+
+    .status-box.error {
+      color: #fca5a5;
+      border-color: rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.08);
+    }
+
+    /* Device metadata info & token toggle */
+    .meta-bar {
+      margin-top: 1.5rem;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      font-size: 0.78rem;
+      color: #64748b;
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+      padding-top: 1.2rem;
+    }
+
+    .device-id-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--accent-cyan);
+      word-break: break-all;
+    }
+
+    details {
+      text-align: left;
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 8px 12px;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: #94a3b8;
+      user-select: none;
+    }
+
+    details input {
+      margin-top: 8px;
+      font-size: 0.8rem;
+    }
+
+    .config-hint {
+      margin-top: 6px;
+      font-size: 0.72rem;
+      line-height: 1.4;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <main class="container">
+    <div class="badge">
+      <span class="badge-dot"></span> Emergency Tracker
+    </div>
+    
+    <h1>SOS Beacon</h1>
+    <p class="subtitle">Press the SOS button below to transmit your device location and IP to the server repository.</p>
+
+    <!-- Name input (optional) -->
+    <div class="field-group">
+      <label for="userName">Name (Optional)</label>
+      <div class="input-wrapper">
+        <input type="text" id="userName" placeholder="e.g. John Doe" autocomplete="name" />
+      </div>
+    </div>
+
+    <!-- SOS Button -->
+    <div class="sos-button-wrapper">
+      <div class="pulse-ring"></div>
+      <button id="sosBtn" class="sos-btn" aria-label="Trigger SOS Alert">SOS</button>
+    </div>
+
+    <!-- Status feedback -->
+    <div id="statusBox" class="status-box">
+      Ready to broadcast. Tap SOS when needed.
+    </div>
+
+    <!-- Footer metadata & settings -->
+    <div class="meta-bar">
+      <div>Device ID: <span id="deviceIdDisplay" class="device-id-tag">Generating...</span></div>
+      
+      <!-- Optional: Custom GitHub repo / token settings for client-side direct update -->
+      <details>
+        <summary>⚙️ GitHub Config (Direct Repo Push)</summary>
+        <div style="margin-top: 8px;">
+          <input type="text" id="repoInput" placeholder="username/repo (default: auto)" />
+          <input type="password" id="tokenInput" placeholder="GitHub Fine-Grained Token (optional)" />
+          <p class="config-hint">
+            <strong>Tip:</strong> If using a backend webhook/serverless proxy (recommended to protect tokens), leave this empty. If writing directly via GitHub API from client, enter a GitHub token with contents:write permission.
+          </p>
+        </div>
+      </details>
+    </div>
+  </main>
+
+  <script>
+    // Configuration & State
+    const CONFIG = {
+      // Relative path to json file in current repository
+      jsonFilePath: 'locations.json',
+      // Optional fallback endpoint if you use a lightweight Serverless API / Cloudflare Worker / GitHub Action webhook
+      backendWebhookUrl: '' // e.g., 'https://your-worker.workers.dev/update-location'
+    };
+
+    const sosBtn = document.getElementById('sosBtn');
+    const userNameInput = document.getElementById('userName');
+    const statusBox = document.getElementById('statusBox');
+    const deviceIdDisplay = document.getElementById('deviceIdDisplay');
+    const repoInput = document.getElementById('repoInput');
+    const tokenInput = document.getElementById('tokenInput');
+
+    // 1. Generate or retrieve persistent Device ID
+    function getOrCreateDeviceId() {
+      let deviceId = localStorage.getItem('sos_device_id');
+      if (!deviceId) {
+        // Generate pseudo-random UUID-like string
+        if (crypto && crypto.randomUUID) {
+          deviceId = 'dev-' + crypto.randomUUID();
+        } else {
+          deviceId = 'dev-' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+        }
+        localStorage.setItem('sos_device_id', deviceId);
+      }
+      return deviceId;
+    }
+
+    const deviceId = getOrCreateDeviceId();
+    deviceIdDisplay.textContent = deviceId;
+
+    // Load saved settings if any
+    const savedName = localStorage.getItem('sos_user_name');
+    if (savedName) userNameInput.value = savedName;
+
+    const savedRepo = localStorage.getItem('sos_gh_repo');
+    if (savedRepo) repoInput.value = savedRepo;
+
+    const savedToken = localStorage.getItem('sos_gh_token');
+    if (savedToken) tokenInput.value = savedToken;
+
+    // Auto-detect repo if hosted on username.github.io/reponame/
+    function inferRepoFromHost() {
+      if (repoInput.value.trim()) return repoInput.value.trim();
+      const host = window.location.hostname;
+      const pathParts = window.location.pathname.split('/').filter(Boolean);
+      if (host.endsWith('.github.io') && pathParts.length > 0) {
+        const user = host.replace('.github.io', '');
+        const repo = pathParts[0];
+        return `${user}/${repo}`;
+      }
+      return '';
+    }
+
+    // 2. Fetch Public IP address
+    async function fetchPublicIP() {
+      try {
+        const res = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('IP service error');
+        const data = await res.json();
+        return data.ip || 'Unknown';
+      } catch (err) {
+        console.warn('IP lookup failed:', err);
+        return 'Unknown';
+      }
+    }
+
+    // 3. Obtain GPS Coordinates
+    function getGPSLocation() {
+      return new Promise((resolve, reject) => {
+        if (!('geolocation' in navigator)) {
+          reject(new Error('Geolocation is not supported by your browser/device.'));
+          return;
+        }
+
+        const options = {
+          enableHighAccuracy: true,
+          timeout: 12000,
+          maximumAge: 0
+        };
+
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            resolve({
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              accuracy: pos.coords.accuracy,
+              altitude: pos.coords.altitude,
+              heading: pos.coords.heading,
+              speed: pos.coords.speed,
+              timestamp: new Date(pos.timestamp).toISOString()
+            });
+          },
+          (err) => {
+            let msg = 'Failed to retrieve location.';
+            if (err.code === 1) msg = 'Location permission denied. Please allow GPS access.';
+            else if (err.code === 2) msg = 'Position unavailable.';
+            else if (err.code === 3) msg = 'Location request timed out.';
+            reject(new Error(msg));
+          },
+          options
+        );
+      });
+    }
+
+    // 4. Update the JSON repository file via GitHub Contents REST API
+    async function updateLocationData(newEntry) {
+      let token = tokenInput.value.trim();
+      let repo = inferRepoFromHost();
+
+      // If token is missing, prompt user or open config
+      if (!token) {
+        document.querySelector('details').open = true;
+        throw new Error('GitHub Token required. Please expand "⚙️ GitHub Config" below and paste your token.');
+      }
+
+      if (!repo) {
+        document.querySelector('details').open = true;
+        throw new Error('GitHub repository (owner/repo) not specified. Please enter it under "⚙️ GitHub Config".');
+      }
+
+      // Save credentials in device localStorage for subsequent one-click alerts
+      localStorage.setItem('sos_gh_token', token);
+      localStorage.setItem('sos_gh_repo', repo);
+
+      const filePath = CONFIG.jsonFilePath;
+      const apiUrl = `https://api.github.com/repos/${repo}/contents/${filePath}`;
+      const headers = {
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+        'Authorization': `token ${token}`
+      };
+
+      // Step A: Fetch current file content and its SHA hash
+      let currentJson = { devices: {} };
+      let fileSha = null;
+
+      try {
+        const getRes = await fetch(apiUrl + `?ref=main&_t=${Date.now()}`, { headers });
+        if (getRes.status === 200) {
+          const fileData = await getRes.json();
+          fileSha = fileData.sha;
+          // Decode Base64 UTF-8 content
+          const decoded = decodeURIComponent(escape(atob(fileData.content.replace(/\s/g, ''))));
+          currentJson = JSON.parse(decoded);
+          if (!currentJson.devices) currentJson.devices = {};
+        } else if (getRes.status === 404) {
+          // File does not exist yet; will create it
+          currentJson = { devices: {} };
+        } else if (getRes.status === 401 || getRes.status === 403) {
+          throw new Error(`Invalid GitHub Token or insufficient permissions (Status ${getRes.status}). Ensure "Contents: Read and write" is granted.`);
+        } else {
+          const errData = await getRes.json().catch(() => ({}));
+          throw new Error(`GitHub check failed (${getRes.status}): ${errData.message || getRes.statusText}`);
+        }
+      } catch (err) {
+        if (!err.message.includes('404')) throw err;
+      }
+
+      // Step B: Upsert entry using deviceId as the primary key
+      currentJson.devices[newEntry.deviceId] = {
+        name: newEntry.name,
+        deviceIp: newEntry.deviceIp,
+        gps: newEntry.gps,
+        updatedAt: new Date().toISOString()
+      };
+
+      // Step C: UTF-8 to Base64 encode JSON
+      const formattedJson = JSON.stringify(currentJson, null, 2);
+      const encodedContent = btoa(unescape(encodeURIComponent(formattedJson)));
+
+      // Step D: Commit change to repository via PUT
+      const payload = {
+        message: `Update SOS beacon: ${newEntry.name || newEntry.deviceId}`,
+        content: encodedContent,
+        branch: 'main'
+      };
+      if (fileSha) {
+        payload.sha = fileSha;
+      }
+
+      const putRes = await fetch(apiUrl, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(payload)
+      });
+
+      if (!putRes.ok) {
+        const errorDetail = await putRes.json().catch(() => ({}));
+        if (putRes.status === 401 || putRes.status === 403) {
+          throw new Error(`Permission denied (${putRes.status}). Verify your Personal Access Token has write access to repository contents.`);
+        }
+        throw new Error(errorDetail.message || `GitHub update failed (${putRes.status})`);
+      }
+
+      return await putRes.json();
+    }
+
+    // SOS Trigger Handler
+    sosBtn.addEventListener('click', async () => {
+      const name = userNameInput.value.trim() || 'Anonymous';
+      localStorage.setItem('sos_user_name', name);
+
+      // UI state
+      sosBtn.classList.add('loading');
+      statusBox.className = 'status-box';
+      statusBox.textContent = 'Acquiring GPS & Network IP...';
+
+      try {
+        // Run IP lookup and GPS query concurrently
+        const [ip, coords] = await Promise.all([
+          fetchPublicIP(),
+          getGPSLocation()
+        ]);
+
+        const record = {
+          deviceId: deviceId,
+          name: name,
+          deviceIp: ip,
+          gps: {
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+            accuracyMeters: coords.accuracy,
+            altitude: coords.altitude,
+            timestamp: coords.timestamp
+          }
+        };
+
+        statusBox.textContent = 'Updating repository file...';
+        await updateLocationData(record);
+
+        statusBox.className = 'status-box success';
+        statusBox.textContent = `Location transmitted! Lat: ${coords.latitude.toFixed(4)}, Lon: ${coords.longitude.toFixed(4)} (IP: ${ip})`;
+
+      } catch (err) {
+        console.error(err);
+        statusBox.className = 'status-box error';
+        statusBox.textContent = `Error: ${err.message}`;
+      } finally {
+        sosBtn.classList.remove('loading');
+      }
+    });
+  </script>
+</body>
+</html>
