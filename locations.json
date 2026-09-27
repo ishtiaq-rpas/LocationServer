@@ -16,13 +16,13 @@
       "name": "Anonymous",
       "deviceIp": "Unknown",
       "gps": {
-        "latitude": 23.792273119648065,
-        "longitude": 90.40418738762726,
-        "accuracyMeters": 108,
+        "latitude": 23.792273664093766,
+        "longitude": 90.4041869395357,
+        "accuracyMeters": 102,
         "altitude": 0,
-        "timestamp": "2026-09-27T12:58:12.914Z"
+        "timestamp": "2026-09-27T12:59:01.333Z"
       },
-      "updatedAt": "2026-09-27T12:58:41.677Z"
+      "updatedAt": "2026-09-27T12:59:02.414Z"
     }
   }
 }
