@@ -28,13 +28,13 @@
       "name": "Ishtiaq",
       "deviceIp": "103.148.212.250",
       "gps": {
-        "latitude": 23.7921187,
-        "longitude": 90.4041754,
-        "accuracyMeters": 15.387999534606934,
+        "latitude": 23.7921216,
+        "longitude": 90.4041718,
+        "accuracyMeters": 25.63599967956543,
         "altitude": -37.500003814697266,
-        "timestamp": "2026-09-27T13:05:18.700Z"
+        "timestamp": "2026-09-27T13:05:28.198Z"
       },
-      "updatedAt": "2026-09-27T13:05:20.960Z"
+      "updatedAt": "2026-09-27T13:05:29.359Z"
     }
   }
 }
