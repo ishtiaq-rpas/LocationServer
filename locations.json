@@ -16,13 +16,13 @@
       "name": "TD",
       "deviceIp": "Unknown",
       "gps": {
-        "latitude": 23.792301387959807,
-        "longitude": 90.40421050091564,
+        "latitude": 23.792302980572753,
+        "longitude": 90.40421803912001,
         "accuracyMeters": 100,
         "altitude": 0,
-        "timestamp": "2026-09-27T13:01:16.328Z"
+        "timestamp": "2026-09-27T13:01:29.651Z"
       },
-      "updatedAt": "2026-09-27T13:01:23.383Z"
+      "updatedAt": "2026-09-27T13:01:38.145Z"
     }
   }
 }
