@@ -80,8 +80,9 @@ If untrusted or arbitrary external users will open the page and you don't want t
 An alternative page [supabase.html](file:///d:/BAGROVISION/LocationServer/supabase.html) is provided that connects directly to your Supabase PostgreSQL database instead of committing JSON files to GitHub.
 
 ### Why Supabase?
+- **1Hz Realtime streaming**: Streams updates every second (1Hz) directly into PostgreSQL.
 - **Sub-second updates**: Avoids Git commit delays and branch conflicts.
-- **Scalable**: Handles dozens of devices transmitting simultaneously every 5 seconds.
+- **Scalable**: Handles continuous streaming from multiple devices simultaneously.
 - **Built for browsers**: Uses HTTPS REST / Supabase-JS directly from client devices.
 
 ### Quick Setup:

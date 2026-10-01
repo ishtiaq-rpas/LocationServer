@@ -346,7 +346,7 @@
     </div>
     
     <h1>SOS Beacon</h1>
-    <p class="subtitle">Tap SOS to stream device location to your Supabase PostgreSQL database every 5 seconds.</p>
+    <p class="subtitle">Tap SOS to stream device location to your Supabase PostgreSQL database at 1Hz (every second).</p>
 
     <!-- Name input (optional) -->
     <div class="field-group">
@@ -552,12 +552,50 @@
       return data;
     }
 
-    // Periodic 5-Second Tracking State
+    // Realtime 1Hz (1-Second) Tracking State
     let isTracking = false;
     let trackingInterval = null;
+    let gpsWatchId = null;
+    let latestCoords = null;
     let wakeLock = null;
     let isTransmitting = false;
     let cachedIp = null;
+    let syncCount = 0;
+
+    // Continuous 1Hz GPS watcher keeps the GPS chipset hot with 0ms latency
+    function startGpsWatch() {
+      if (!('geolocation' in navigator)) return;
+      const options = {
+        enableHighAccuracy: true,
+        maximumAge: 1000,
+        timeout: 4000
+      };
+      gpsWatchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          latestCoords = {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            accuracyMeters: pos.coords.accuracy,
+            altitude: pos.coords.altitude,
+            heading: pos.coords.heading,
+            speed: pos.coords.speed,
+            timestamp: new Date(pos.timestamp).toISOString()
+          };
+        },
+        (err) => {
+          console.warn('GPS continuous watch warning:', err);
+        },
+        options
+      );
+    }
+
+    function stopGpsWatch() {
+      if (gpsWatchId !== null) {
+        navigator.geolocation.clearWatch(gpsWatchId);
+        gpsWatchId = null;
+      }
+      latestCoords = null;
+    }
 
     async function requestWakeLock() {
       try {
@@ -576,9 +614,9 @@
       }
     }
 
-    // Execute one transmission cycle
+    // Execute one transmission cycle at 1Hz
     async function executeTrackingCycle() {
-      if (isTransmitting) return;
+      if (isTransmitting) return; // Prevent network congestion if previous HTTP frame takes longer
       isTransmitting = true;
 
       const name = userNameInput.value.trim() || 'Anonymous';
@@ -589,8 +627,12 @@
           cachedIp = await fetchPublicIP();
         }
 
-        statusBox.textContent = 'Acquiring GPS fix...';
-        const coords = await getGPSLocation();
+        // Use continuous coordinates from watchPosition if fresh, or fetch single fix
+        let coords = latestCoords;
+        if (!coords) {
+          statusBox.textContent = 'Acquiring GPS fix (1Hz)...';
+          coords = await getGPSLocation();
+        }
 
         const record = {
           deviceId: deviceId,
@@ -605,15 +647,16 @@
           }
         };
 
-        statusBox.textContent = 'Syncing to Supabase PostgreSQL...';
         await updateLocationData(record);
+        syncCount++;
 
         const timeStr = new Date().toLocaleTimeString();
         statusBox.className = 'status-box success';
-        statusBox.textContent = `[${timeStr}] Synced to Supabase: Lat ${coords.latitude.toFixed(4)}, Lon ${coords.longitude.toFixed(4)}`;
+        statusBox.textContent = `[${timeStr}] 1Hz Synced (#${syncCount}): Lat ${coords.latitude.toFixed(4)}, Lon ${coords.longitude.toFixed(4)}`;
 
-        if (navigator.vibrate) {
-          navigator.vibrate(40);
+        // Subtle micro-pulse every 5 seconds to confirm live heartbeat without draining motor
+        if (navigator.vibrate && syncCount % 5 === 0) {
+          navigator.vibrate(25);
         }
       } catch (err) {
         console.error(err);
@@ -635,18 +678,20 @@
       }
 
       isTracking = true;
+      syncCount = 0;
       sosBtn.classList.add('active-tracking');
       sosBtn.textContent = 'STOP';
       statusBox.className = 'status-box';
-      statusBox.textContent = 'Live beacon active. Updating Supabase every 5 seconds...';
+      statusBox.textContent = 'Live beacon active. Streaming to Supabase at 1Hz...';
 
       if (navigator.vibrate) {
         navigator.vibrate([100, 80, 150]);
       }
       requestWakeLock();
+      startGpsWatch();
 
       executeTrackingCycle();
-      trackingInterval = setInterval(executeTrackingCycle, 5000);
+      trackingInterval = setInterval(executeTrackingCycle, 1000); // 1Hz = 1 cycle per second
     }
 
     function stopLiveTracking() {
@@ -655,12 +700,13 @@
         clearInterval(trackingInterval);
         trackingInterval = null;
       }
+      stopGpsWatch();
       releaseWakeLock();
       sosBtn.classList.remove('active-tracking');
       sosBtn.classList.remove('loading');
       sosBtn.textContent = 'SOS';
       statusBox.className = 'status-box';
-      statusBox.textContent = 'Beacon paused. Tap SOS to resume 5-second updates.';
+      statusBox.textContent = 'Beacon paused. Tap SOS to resume 1Hz streaming.';
 
       if (navigator.vibrate) {
         navigator.vibrate(120);
