@@ -378,8 +378,8 @@
       <details id="configDetails">
         <summary>⚙️ Supabase Settings</summary>
         <div style="margin-top: 8px;">
-          <input type="text" id="supabaseUrlInput" placeholder="Supabase Project URL" />
-          <input type="password" id="supabaseKeyInput" placeholder="Supabase Anon/Public Key" />
+          <input type="text" id="supabaseUrlInput" placeholder="Supabase Project URL" value="https://xxhqgultqcnnwxjwytgk.supabase.co" />
+          <input type="password" id="supabaseKeyInput" placeholder="Supabase Anon/Public Key" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4aHFndWx0cWNubnd4and5dGdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4NTI4ODgsImV4cCI6MjEwNjQyODg4OH0.s5-L8gpP89XUEiIzXmLY34QXq2E5rg9BUtgYVlZ_e6A" />
           <p class="config-hint">
             <strong>Note:</strong> Browsers connect to Supabase via its HTTPS REST API (Data API) using your project's <strong>anon key</strong>. Get this from: Supabase Dashboard &rarr; Project Settings &rarr; API &rarr; <code>Project API keys (anon / public)</code>.
           </p>
@@ -409,6 +409,10 @@
     const supabaseKeyInput = document.getElementById('supabaseKeyInput');
     const configDetails = document.getElementById('configDetails');
 
+    // Pre-populate input fields directly
+    supabaseUrlInput.value = CONFIG.supabaseUrl;
+    supabaseKeyInput.value = CONFIG.supabaseAnonKey;
+
     // 1. Generate or retrieve persistent Device ID
     function getOrCreateDeviceId() {
       let deviceId = localStorage.getItem('sos_device_id');
@@ -426,14 +430,14 @@
     const deviceId = getOrCreateDeviceId();
     deviceIdDisplay.textContent = deviceId;
 
-    // Load saved settings
+    // Load saved settings if previously changed by user
     const savedName = localStorage.getItem('sos_user_name');
     if (savedName) userNameInput.value = savedName;
 
-    const savedUrl = localStorage.getItem('sos_sb_url') || CONFIG.supabaseUrl;
-    supabaseUrlInput.value = savedUrl;
+    const savedUrl = localStorage.getItem('sos_sb_url');
+    if (savedUrl) supabaseUrlInput.value = savedUrl;
 
-    const savedKey = localStorage.getItem('sos_sb_anon_key') || CONFIG.supabaseAnonKey;
+    const savedKey = localStorage.getItem('sos_sb_anon_key');
     if (savedKey) supabaseKeyInput.value = savedKey;
 
     let supabaseClient = null;
