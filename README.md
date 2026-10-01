@@ -75,5 +75,47 @@ If untrusted or arbitrary external users will open the page and you don't want t
 
 ---
 
-## 3. Important GPS Note
+## 3. Alternative Page: Supabase PostgreSQL Realtime Tracking
+
+An alternative page [supabase.html](file:///d:/BAGROVISION/LocationServer/supabase.html) is provided that connects directly to your Supabase PostgreSQL database instead of committing JSON files to GitHub.
+
+### Why Supabase?
+- **Sub-second updates**: Avoids Git commit delays and branch conflicts.
+- **Scalable**: Handles dozens of devices transmitting simultaneously every 5 seconds.
+- **Built for browsers**: Uses HTTPS REST / Supabase-JS directly from client devices.
+
+### Quick Setup:
+1. Open your **[Supabase SQL Editor](https://supabase.com/dashboard/project/xxhqgultqcnnwxjwytgk/sql)**.
+2. Paste and run the SQL from [supabase_setup.sql](file:///d:/BAGROVISION/LocationServer/supabase_setup.sql):
+   ```sql
+   CREATE TABLE IF NOT EXISTS public.locations (
+       device_id TEXT PRIMARY KEY,
+       name TEXT,
+       device_ip TEXT,
+       latitude DOUBLE PRECISION,
+       longitude DOUBLE PRECISION,
+       accuracy_meters DOUBLE PRECISION,
+       altitude DOUBLE PRECISION,
+       gps_timestamp TIMESTAMPTZ,
+       updated_at TIMESTAMPTZ DEFAULT NOW()
+   );
+
+   ALTER TABLE public.locations ENABLE ROW LEVEL SECURITY;
+
+   CREATE POLICY "Allow public read and upsert"
+   ON public.locations
+   FOR ALL
+   TO anon, authenticated
+   USING (true)
+   WITH CHECK (true);
+   ```
+3. Get your **anon public key**:
+   - Go to **Project Settings &rarr; API &rarr; Project API keys (anon / public)**.
+   - Paste it once in `supabase.html` under **⚙️ Supabase Settings** (or hardcode it in `CONFIG.supabaseAnonKey`).
+4. Access the page live via:
+   `https://ishtiaq-rpas.github.io/LocationServer/supabase.html`
+
+---
+
+## 4. Important GPS Note
 Browsers only provide high-accuracy GPS coordinates (`navigator.geolocation`) over **secure contexts (HTTPS)**. GitHub Pages automatically enables HTTPS (`https://username.github.io/...`), satisfying this requirement.

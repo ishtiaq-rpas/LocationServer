@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#090d16" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>SOS Location Beacon (Supabase)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Supabase JS Client library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(18, 26, 44, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --sos-red: #ef4444;
+      --sos-glow: rgba(239, 68, 68, 0.45);
+      --accent-cyan: #38bdf8;
+      --accent-green: #3ecf8e; /* Supabase green accent */
+      --success: #22c55e;
+      --warning: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      background: radial-gradient(circle at 50% 20%, #0d2822 0%, var(--bg) 65%);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+      background-size: 24px 24px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 440px;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 28px;
+      padding: 2.2rem 1.8rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.65), 0 0 40px rgba(62, 207, 142, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--accent-green);
+      background: rgba(62, 207, 142, 0.12);
+      border: 1px solid rgba(62, 207, 142, 0.25);
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 0.75rem;
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-green);
+      animation: pulse-dot 2s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.35rem;
+    }
+
+    p.subtitle {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 1.75rem;
+      line-height: 1.4;
+    }
+
+    .field-group {
+      width: 100%;
+      text-align: left;
+      margin-bottom: 2rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      color: #fff;
+      outline: none;
+      transition: all 0.25s ease;
+    }
+
+    input[type="text"]:focus, input[type="password"]:focus {
+      border-color: var(--accent-green);
+      box-shadow: 0 0 0 3px rgba(62, 207, 142, 0.2);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    input[type="text"]::placeholder, input[type="password"]::placeholder {
+      color: #64748b;
+    }
+
+    /* SOS Button Outer Pulsing Ring */
+    .sos-button-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .pulse-ring {
+      position: absolute;
+      width: 175px;
+      height: 175px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--sos-glow) 0%, transparent 70%);
+      animation: pulse-ring-anim 2.2s cubic-bezier(0.25, 0, 0, 1) infinite;
+      z-index: 0;
+    }
+
+    @keyframes pulse-ring-anim {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+
+    .sos-btn {
+      position: relative;
+      z-index: 1;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: none;
+      background: radial-gradient(circle at 35% 30%, #f87171 0%, #dc2626 55%, #991b1b 100%);
+      box-shadow: 
+        0 12px 35px rgba(220, 38, 38, 0.55),
+        inset 0 4px 6px rgba(255, 255, 255, 0.35),
+        inset 0 -6px 8px rgba(0, 0, 0, 0.4);
+      color: #ffffff;
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.2s ease;
+    }
+
+    .sos-btn:hover {
+      transform: scale(1.04);
+      box-shadow: 
+        0 16px 45px rgba(239, 68, 68, 0.65),
+        inset 0 4px 8px rgba(255, 255, 255, 0.45),
+        inset 0 -6px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    .sos-btn:active {
+      transform: scale(0.95);
+      box-shadow: 
+        0 6px 20px rgba(220, 38, 38, 0.5),
+        inset 0 4px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .sos-btn.loading {
+      filter: grayscale(0.2) brightness(0.85);
+      animation: button-breathing 1.2s infinite alternate;
+    }
+
+    .sos-btn.active-tracking {
+      background: radial-gradient(circle at 35% 30%, #ef4444 0%, #b91c1c 55%, #7f1d1d 100%);
+      box-shadow: 
+        0 14px 45px rgba(239, 68, 68, 0.75),
+        inset 0 4px 6px rgba(255, 255, 255, 0.4),
+        inset 0 -6px 8px rgba(0, 0, 0, 0.5);
+      animation: button-transmitting 1.4s infinite alternate;
+    }
+
+    @keyframes button-transmitting {
+      0% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.5)); }
+      100% { transform: scale(1.05); filter: drop-shadow(0 0 25px rgba(239, 68, 68, 0.9)); }
+    }
+
+    @keyframes button-breathing {
+      0% { transform: scale(0.97); }
+      100% { transform: scale(1.02); }
+    }
+
+    /* Status Display */
+    .status-box {
+      width: 100%;
+      min-height: 48px;
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .status-box.success {
+      color: #86efac;
+      border-color: rgba(34, 197, 94, 0.3);
+      background: rgba(34, 197, 94, 0.08);
+    }
+
+    .status-box.error {
+      color: #fca5a5;
+      border-color: rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.08);
+    }
+
+    /* Device metadata info & token toggle */
+    .meta-bar {
+      margin-top: 1.5rem;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      font-size: 0.78rem;
+      color: #64748b;
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+      padding-top: 1.2rem;
+    }
+
+    .device-id-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--accent-green);
+      word-break: break-all;
+    }
+
+    details {
+      text-align: left;
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 8px 12px;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: #94a3b8;
+      user-select: none;
+    }
+
+    details input {
+      margin-top: 8px;
+      font-size: 0.8rem;
+    }
+
+    .config-hint {
+      margin-top: 6px;
+      font-size: 0.72rem;
+      line-height: 1.4;
+      color: #64748b;
+    }
+
+    .view-link {
+      color: var(--accent-cyan);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .view-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <main class="container">
+    <div class="badge">
+      <span class="badge-dot"></span> Supabase Connected
+    </div>
+    
+    <h1>SOS Beacon</h1>
+    <p class="subtitle">Tap SOS to stream device location to your Supabase PostgreSQL database every 5 seconds.</p>
+
+    <!-- Name input (optional) -->
+    <div class="field-group">
+      <label for="userName">Name (Optional)</label>
+      <div class="input-wrapper">
+        <input type="text" id="userName" placeholder="e.g. John Doe" autocomplete="name" />
+      </div>
+    </div>
+
+    <!-- SOS Button -->
+    <div class="sos-button-wrapper">
+      <div class="pulse-ring"></div>
+      <button id="sosBtn" class="sos-btn" aria-label="Trigger SOS Alert">SOS</button>
+    </div>
+
+    <!-- Status feedback -->
+    <div id="statusBox" class="status-box">
+      Ready. Tap SOS to start live tracking.
+    </div>
+
+    <!-- Footer metadata & settings -->
+    <div class="meta-bar">
+      <div>Device ID: <span id="deviceIdDisplay" class="device-id-tag">Generating...</span></div>
+      <div>
+        <a class="view-link" href="index.html">Switch to GitHub JSON version &rarr;</a>
+      </div>
+      
+      <!-- Optional: Custom Supabase Config -->
+      <details id="configDetails">
+        <summary>⚙️ Supabase Settings</summary>
+        <div style="margin-top: 8px;">
+          <input type="text" id="supabaseUrlInput" placeholder="Supabase Project URL" />
+          <input type="password" id="supabaseKeyInput" placeholder="Supabase Anon/Public Key" />
+          <p class="config-hint">
+            <strong>Note:</strong> Browsers connect to Supabase via its HTTPS REST API (Data API) using your project's <strong>anon key</strong>. Get this from: Supabase Dashboard &rarr; Project Settings &rarr; API &rarr; <code>Project API keys (anon / public)</code>.
+          </p>
+        </div>
+      </details>
+    </div>
+  </main>
+
+  <script>
+    // Configuration & State
+    const CONFIG = {
+      // Supabase Project REST URL derived from connection host xxhqgultqcnnwxjwytgk.supabase.co
+      supabaseUrl: 'https://xxhqgultqcnnwxjwytgk.supabase.co',
+      
+      // Default Supabase Anon/Public Key (You can paste it here or in the UI settings drawer)
+      supabaseAnonKey: '',
+      
+      // Target Table Name in PostgreSQL
+      tableName: 'locations'
+    };
+
+    const sosBtn = document.getElementById('sosBtn');
+    const userNameInput = document.getElementById('userName');
+    const statusBox = document.getElementById('statusBox');
+    const deviceIdDisplay = document.getElementById('deviceIdDisplay');
+    const supabaseUrlInput = document.getElementById('supabaseUrlInput');
+    const supabaseKeyInput = document.getElementById('supabaseKeyInput');
+    const configDetails = document.getElementById('configDetails');
+
+    // 1. Generate or retrieve persistent Device ID
+    function getOrCreateDeviceId() {
+      let deviceId = localStorage.getItem('sos_device_id');
+      if (!deviceId) {
+        if (crypto && crypto.randomUUID) {
+          deviceId = 'dev-' + crypto.randomUUID();
+        } else {
+          deviceId = 'dev-' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+        }
+        localStorage.setItem('sos_device_id', deviceId);
+      }
+      return deviceId;
+    }
+
+    const deviceId = getOrCreateDeviceId();
+    deviceIdDisplay.textContent = deviceId;
+
+    // Load saved settings
+    const savedName = localStorage.getItem('sos_user_name');
+    if (savedName) userNameInput.value = savedName;
+
+    const savedUrl = localStorage.getItem('sos_sb_url') || CONFIG.supabaseUrl;
+    supabaseUrlInput.value = savedUrl;
+
+    const savedKey = localStorage.getItem('sos_sb_anon_key') || CONFIG.supabaseAnonKey;
+    if (savedKey) supabaseKeyInput.value = savedKey;
+
+    let supabaseClient = null;
+
+    function getSupabaseClient() {
+      const url = supabaseUrlInput.value.trim() || CONFIG.supabaseUrl;
+      const key = supabaseKeyInput.value.trim() || CONFIG.supabaseAnonKey;
+
+      if (!key) {
+        configDetails.open = true;
+        throw new Error('Supabase Anon Key is required. Please paste your anon/public key in ⚙️ Supabase Settings.');
+      }
+
+      localStorage.setItem('sos_sb_url', url);
+      localStorage.setItem('sos_sb_anon_key', key);
+
+      if (!supabaseClient || supabaseClient.supabaseUrl !== url || supabaseClient.supabaseKey !== key) {
+        supabaseClient = window.supabase.createClient(url, key);
+      }
+      return supabaseClient;
+    }
+
+    // 2. Fetch Public IP address
+    async function fetchPublicIP() {
+      try {
+        const res = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('IP service error');
+        const data = await res.json();
+        return data.ip || 'Unknown';
+      } catch (err) {
+        console.warn('IP lookup failed:', err);
+        return 'Unknown';
+      }
+    }
+
+    // 3. Obtain GPS Coordinates (Android & Mobile Optimized)
+    function getGPSLocation() {
+      return new Promise((resolve, reject) => {
+        if (!('geolocation' in navigator)) {
+          reject(new Error('Geolocation is not supported by your browser/device.'));
+          return;
+        }
+
+        // Try High Accuracy GPS first with 10s timeout
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolveFormat(pos),
+          (highErr) => {
+            if (highErr.code === 3) {
+              console.warn('High accuracy GPS timed out, trying network positioning...');
+              navigator.geolocation.getCurrentPosition(
+                (pos) => resolveFormat(pos),
+                (lowErr) => reject(formatGeoError(lowErr)),
+                { enableHighAccuracy: false, timeout: 8000, maximumAge: 30000 }
+              );
+            } else {
+              reject(formatGeoError(highErr));
+            }
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+
+        function resolveFormat(pos) {
+          resolve({
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            accuracyMeters: pos.coords.accuracy,
+            altitude: pos.coords.altitude,
+            heading: pos.coords.heading,
+            speed: pos.coords.speed,
+            timestamp: new Date(pos.timestamp).toISOString()
+          });
+        }
+
+        function formatGeoError(err) {
+          if (err.code === 1) {
+            return new Error('Location permission denied. Please allow Location access in browser settings.');
+          }
+          if (err.code === 2) {
+            return new Error('GPS position unavailable. Please ensure Location/GPS is turned ON in quick settings.');
+          }
+          return new Error('Location request timed out. Please check signal and try again.');
+        }
+      });
+    }
+
+    // 4. Upsert location into Supabase PostgreSQL database
+    async function updateLocationData(newEntry) {
+      const client = getSupabaseClient();
+
+      const payload = {
+        device_id: newEntry.deviceId,
+        name: newEntry.name,
+        device_ip: newEntry.deviceIp,
+        latitude: newEntry.gps.latitude,
+        longitude: newEntry.gps.longitude,
+        accuracy_meters: newEntry.gps.accuracyMeters,
+        altitude: newEntry.gps.altitude,
+        gps_timestamp: newEntry.gps.timestamp,
+        updated_at: new Date().toISOString()
+      };
+
+      // Upsert using device_id as primary key
+      const { data, error } = await client
+        .from(CONFIG.tableName)
+        .upsert(payload, { onConflict: 'device_id' })
+        .select();
+
+      if (error) {
+        throw new Error(error.message || 'Supabase database upsert failed');
+      }
+
+      return data;
+    }
+
+    // Periodic 5-Second Tracking State
+    let isTracking = false;
+    let trackingInterval = null;
+    let wakeLock = null;
+    let isTransmitting = false;
+    let cachedIp = null;
+
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+        }
+      } catch (err) {
+        console.warn('Wake Lock error:', err);
+      }
+    }
+
+    function releaseWakeLock() {
+      if (wakeLock) {
+        wakeLock.release().catch(() => {});
+        wakeLock = null;
+      }
+    }
+
+    // Execute one transmission cycle
+    async function executeTrackingCycle() {
+      if (isTransmitting) return;
+      isTransmitting = true;
+
+      const name = userNameInput.value.trim() || 'Anonymous';
+      localStorage.setItem('sos_user_name', name);
+
+      try {
+        if (!cachedIp) {
+          cachedIp = await fetchPublicIP();
+        }
+
+        statusBox.textContent = 'Acquiring GPS fix...';
+        const coords = await getGPSLocation();
+
+        const record = {
+          deviceId: deviceId,
+          name: name,
+          deviceIp: cachedIp,
+          gps: {
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+            accuracyMeters: coords.accuracyMeters,
+            altitude: coords.altitude,
+            timestamp: coords.timestamp
+          }
+        };
+
+        statusBox.textContent = 'Syncing to Supabase PostgreSQL...';
+        await updateLocationData(record);
+
+        const timeStr = new Date().toLocaleTimeString();
+        statusBox.className = 'status-box success';
+        statusBox.textContent = `[${timeStr}] Synced to Supabase: Lat ${coords.latitude.toFixed(4)}, Lon ${coords.longitude.toFixed(4)}`;
+
+        if (navigator.vibrate) {
+          navigator.vibrate(40);
+        }
+      } catch (err) {
+        console.error(err);
+        statusBox.className = 'status-box error';
+        statusBox.textContent = `Sync Error: ${err.message}`;
+      } finally {
+        isTransmitting = false;
+      }
+    }
+
+    function startLiveTracking() {
+      // Validate key before starting
+      try {
+        getSupabaseClient();
+      } catch (err) {
+        statusBox.className = 'status-box error';
+        statusBox.textContent = err.message;
+        return;
+      }
+
+      isTracking = true;
+      sosBtn.classList.add('active-tracking');
+      sosBtn.textContent = 'STOP';
+      statusBox.className = 'status-box';
+      statusBox.textContent = 'Live beacon active. Updating Supabase every 5 seconds...';
+
+      if (navigator.vibrate) {
+        navigator.vibrate([100, 80, 150]);
+      }
+      requestWakeLock();
+
+      executeTrackingCycle();
+      trackingInterval = setInterval(executeTrackingCycle, 5000);
+    }
+
+    function stopLiveTracking() {
+      isTracking = false;
+      if (trackingInterval) {
+        clearInterval(trackingInterval);
+        trackingInterval = null;
+      }
+      releaseWakeLock();
+      sosBtn.classList.remove('active-tracking');
+      sosBtn.classList.remove('loading');
+      sosBtn.textContent = 'SOS';
+      statusBox.className = 'status-box';
+      statusBox.textContent = 'Beacon paused. Tap SOS to resume 5-second updates.';
+
+      if (navigator.vibrate) {
+        navigator.vibrate(120);
+      }
+    }
+
+    // SOS / Toggle Trigger Handler
+    sosBtn.addEventListener('click', () => {
+      if (isTracking) {
+        stopLiveTracking();
+      } else {
+        startLiveTracking();
+      }
+    });
+  </script>
+</body>
+</html>
